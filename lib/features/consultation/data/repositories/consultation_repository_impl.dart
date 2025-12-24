@@ -78,5 +78,47 @@ class ConsultationRepository {
         .map((doc) => ConsultationModel.fromFirestore(doc))
         .toList();
   }
+
+  // Admin methods
+  Stream<List<ConsultationModel>> getAllConsultations() {
+    return _firestore
+        .collection(AppConstants.consultationsCollection)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ConsultationModel.fromFirestore(doc))
+            .toList())
+        .asBroadcastStream();
+  }
+
+  Future<List<ConsultationModel>> getAllConsultationsOnce() async {
+    final snapshot = await _firestore
+        .collection(AppConstants.consultationsCollection)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => ConsultationModel.fromFirestore(doc))
+        .toList();
+  }
+
+  Future<int> getConsultationsCount() async {
+    final snapshot = await _firestore
+        .collection(AppConstants.consultationsCollection)
+        .count()
+        .get();
+    return snapshot.count ?? 0;
+  }
+
+  Stream<List<ConsultationModel>> getRecentConsultations({int limit = 5}) {
+    return _firestore
+        .collection(AppConstants.consultationsCollection)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ConsultationModel.fromFirestore(doc))
+            .toList())
+        .asBroadcastStream();
+  }
 }
 
