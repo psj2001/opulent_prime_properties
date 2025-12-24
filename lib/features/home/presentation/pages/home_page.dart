@@ -632,6 +632,30 @@ class _InvestorQuickActions extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _AnimatedQuickActionCard(
+                title: 'Blog',
+                icon: Icons.article_rounded,
+                color: AppTheme.accentColor,
+                delay: delay + 400,
+                onTap: () => context.push(RouteNames.blog),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _AnimatedQuickActionCard(
+                title: 'About Us',
+                icon: Icons.info_rounded,
+                color: AppTheme.primaryColor,
+                delay: delay + 500,
+                onTap: () => context.push(RouteNames.aboutUs),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

@@ -17,6 +17,9 @@ class RouteNames {
   static const String contact = '/contact';
   static const String profile = '/profile';
   static const String goldenVisa = '/golden-visa';
+  static const String blog = '/blog';
+  static const String blogDetail = '/blog-detail';
+  static const String aboutUs = '/about-us';
   
   // Admin Routes
   static const String adminLogin = '/admin/login';

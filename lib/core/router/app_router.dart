@@ -18,6 +18,9 @@ import 'package:opulent_prime_properties/features/education/presentation/pages/e
 import 'package:opulent_prime_properties/features/services/presentation/pages/services_page.dart';
 import 'package:opulent_prime_properties/features/contact/presentation/pages/contact_page.dart';
 import 'package:opulent_prime_properties/features/profile/presentation/pages/profile_page.dart';
+import 'package:opulent_prime_properties/features/blog/presentation/pages/blog_page.dart';
+import 'package:opulent_prime_properties/features/blog/presentation/pages/blog_detail_page.dart';
+import 'package:opulent_prime_properties/features/about/presentation/pages/about_us_page.dart';
 import 'package:opulent_prime_properties/features/admin/dashboard/presentation/pages/admin_dashboard_page.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/presentation/pages/opportunities_list_page.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/presentation/pages/opportunity_form_page.dart';
@@ -117,6 +120,21 @@ class AppRouter {
       GoRoute(
         path: RouteNames.goldenVisa,
         builder: (context, state) => const GoldenVisaPage(),
+      ),
+      GoRoute(
+        path: RouteNames.blog,
+        builder: (context, state) => const BlogPage(),
+      ),
+      GoRoute(
+        path: '${RouteNames.blogDetail}/:blogId',
+        builder: (context, state) {
+          final blogId = state.pathParameters['blogId']!;
+          return BlogDetailPage(blogId: blogId);
+        },
+      ),
+      GoRoute(
+        path: RouteNames.aboutUs,
+        builder: (context, state) => const AboutUsPage(),
       ),
       
       // Admin Routes

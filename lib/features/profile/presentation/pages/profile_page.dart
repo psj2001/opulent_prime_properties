@@ -77,6 +77,20 @@ class ProfilePage extends StatelessWidget {
                   },
                 ),
                 _ProfileMenuItem(
+                  icon: Icons.article,
+                  title: 'Blog',
+                  onTap: () {
+                    context.push(RouteNames.blog);
+                  },
+                ),
+                _ProfileMenuItem(
+                  icon: Icons.info,
+                  title: 'About Us',
+                  onTap: () {
+                    context.push(RouteNames.aboutUs);
+                  },
+                ),
+                _ProfileMenuItem(
                   icon: Icons.settings,
                   title: 'Settings',
                   onTap: () {
