@@ -17,13 +17,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutRequested>(_onSignOutRequested);
     on<AuthStatusChanged>(_onAuthStatusChanged);
     
-    // Listen to auth state changes
-    authRepository.authStateChanges().listen((user) {
-      if (user != null) {
-        add(AuthStatusChanged(user));
-      } else {
-        add(AuthStatusChanged(null));
-      }
+    // Listen to auth state changes - delay subscription to ensure handlers are registered
+    Future.microtask(() {
+      authRepository.authStateChanges().listen((user) {
+        if (user != null) {
+          add(AuthStatusChanged(user));
+        } else {
+          add(AuthStatusChanged(null));
+        }
+      });
     });
   }
   

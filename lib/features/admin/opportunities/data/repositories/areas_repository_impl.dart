@@ -32,6 +32,15 @@ class AreasRepository {
         .toList();
   }
 
+  Future<AreaModel?> getArea(String areaId) async {
+    final doc = await _firestore
+        .collection(AppConstants.areasCollection)
+        .doc(areaId)
+        .get();
+    if (!doc.exists) return null;
+    return AreaModel.fromFirestore(doc);
+  }
+
   Future<AreaModel> createArea(String name) async {
     // Check if area already exists (case-insensitive)
     final existingSnapshot = await _firestore

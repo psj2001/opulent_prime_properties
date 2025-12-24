@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
+import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
+import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -123,13 +126,38 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 5,
-                      itemBuilder: (context, index) {
-                        return _FeaturedOpportunityCard(
-                          onTap: () {
-                            // TODO: Navigate to opportunity detail
+                    child: StreamBuilder<List<OpportunityModel>>(
+                      stream: OpportunitiesRepository().getActiveOpportunities(limit: 5),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        }
+                        
+                        final opportunities = snapshot.data ?? [];
+                        
+                        if (opportunities.isEmpty) {
+                          return const Center(
+                            child: Text('No featured opportunities available'),
+                          );
+                        }
+                        
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: opportunities.length,
+                          itemBuilder: (context, index) {
+                            final opportunity = opportunities[index];
+                            return _FeaturedOpportunityCard(
+                              opportunity: opportunity,
+                              onTap: () {
+                                context.push('${RouteNames.opportunity}/${opportunity.opportunityId}');
+                              },
+                            );
                           },
                         );
                       },
@@ -216,12 +244,21 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 class _FeaturedOpportunityCard extends StatelessWidget {
+  final OpportunityModel opportunity;
   final VoidCallback onTap;
 
-  const _FeaturedOpportunityCard({required this.onTap});
+  const _FeaturedOpportunityCard({
+    required this.opportunity,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final priceFormat = NumberFormat.currency(
+      symbol: 'AED ',
+      decimalDigits: 0,
+    );
+    
     return Card(
       margin: const EdgeInsets.only(right: 16),
       child: InkWell(
@@ -239,24 +276,41 @@ class _FeaturedOpportunityCard extends StatelessWidget {
                     top: Radius.circular(12),
                   ),
                 ),
-                child: const Center(
-                  child: Icon(Icons.home, size: 60, color: Colors.grey),
-                ),
+                child: opportunity.images.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        child: Image.network(
+                          opportunity.images.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(Icons.home, size: 60, color: Colors.grey),
+                            );
+                          },
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(Icons.home, size: 60, color: Colors.grey),
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Premium Property',
-                      style: TextStyle(
+                    Text(
+                      opportunity.title,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'AED 2,500,000',
+                      priceFormat.format(opportunity.price),
                       style: TextStyle(
                         color: AppTheme.secondaryColor,
                         fontWeight: FontWeight.bold,

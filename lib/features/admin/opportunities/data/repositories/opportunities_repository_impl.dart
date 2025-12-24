@@ -67,5 +67,64 @@ class OpportunitiesRepository {
         .doc(opportunityId)
         .delete();
   }
+
+  Stream<List<OpportunityModel>> getOpportunitiesByCategory(String categoryId) {
+    return _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('categoryId', isEqualTo: categoryId)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => OpportunityModel.fromFirestore(doc))
+            .toList())
+        .asBroadcastStream();
+  }
+
+  Future<List<OpportunityModel>> getOpportunitiesByCategoryOnce(String categoryId) async {
+    final snapshot = await _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('categoryId', isEqualTo: categoryId)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => OpportunityModel.fromFirestore(doc))
+        .toList();
+  }
+
+  Stream<List<OpportunityModel>> getActiveOpportunities({int? limit}) {
+    var query = _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .orderBy('createdAt', descending: true);
+    
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+    
+    return query
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => OpportunityModel.fromFirestore(doc))
+            .toList())
+        .asBroadcastStream();
+  }
+
+  Future<List<OpportunityModel>> getActiveOpportunitiesOnce({int? limit}) async {
+    var query = _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .orderBy('createdAt', descending: true);
+    
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+    
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => OpportunityModel.fromFirestore(doc))
+        .toList();
+  }
 }
 
