@@ -31,5 +31,30 @@ class AreasRepository {
         .where((area) => area.isActive) // Filter active areas in code
         .toList();
   }
+
+  Future<AreaModel> createArea(String name) async {
+    // Check if area already exists (case-insensitive)
+    final existingSnapshot = await _firestore
+        .collection(AppConstants.areasCollection)
+        .where('name', isEqualTo: name)
+        .limit(1)
+        .get();
+    
+    if (existingSnapshot.docs.isNotEmpty) {
+      // Return existing area
+      return AreaModel.fromFirestore(existingSnapshot.docs.first);
+    }
+    
+    // Create new area
+    final docRef = _firestore.collection(AppConstants.areasCollection).doc();
+    final area = AreaModel(
+      areaId: docRef.id,
+      name: name.trim(),
+      isActive: true,
+    );
+    
+    await docRef.set(area.toFirestore());
+    return area;
+  }
 }
 

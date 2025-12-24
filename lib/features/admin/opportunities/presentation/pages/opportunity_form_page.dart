@@ -24,6 +24,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _featuresController = TextEditingController();
+  final _areaController = TextEditingController();
   
   final _opportunitiesRepo = OpportunitiesRepository();
   final _categoriesRepo = CategoriesRepository();
@@ -31,6 +32,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
   
   String? _selectedCategoryId;
   String? _selectedAreaId;
+  String _areaName = '';
   String _status = AppConstants.opportunityStatusActive;
   bool _isLoading = false;
   bool _isSaving = false;
@@ -55,6 +57,21 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
         _selectedAreaId = opportunity.areaId;
         _status = opportunity.status;
         _featuresController.text = opportunity.features.join(', ');
+        
+        // Load area name if editing
+        if (opportunity.areaId.isNotEmpty) {
+          try {
+            final areas = await _areasRepo.getAreasOnce();
+            final area = areas.firstWhere(
+              (a) => a.areaId == opportunity.areaId,
+              orElse: () => AreaModel(areaId: '', name: '', isActive: true),
+            );
+            _areaController.text = area.name;
+            _areaName = area.name;
+          } catch (e) {
+            // Area not found, leave empty
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -75,6 +92,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
     _descriptionController.dispose();
     _priceController.dispose();
     _featuresController.dispose();
+    _areaController.dispose();
     super.dispose();
   }
 
@@ -88,9 +106,9 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
       return;
     }
     
-    if (_selectedAreaId == null) {
+    if (_areaController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an area')),
+        const SnackBar(content: Text('Please enter an area name')),
       );
       return;
     }
@@ -105,6 +123,10 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
           .where((f) => f.isNotEmpty)
           .toList();
       
+      // Create or get area
+      final area = await _areasRepo.createArea(_areaController.text.trim());
+      final areaId = area.areaId;
+      
       if (widget.opportunityId == null) {
         // Create new opportunity
         final docRef = FirebaseFirestore.instance
@@ -116,7 +138,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
           title: _titleController.text,
           description: _descriptionController.text,
           categoryId: _selectedCategoryId!,
-          areaId: _selectedAreaId!,
+          areaId: areaId,
           price: double.tryParse(_priceController.text) ?? 0,
           images: [], // TODO: Add image upload
           features: features,
@@ -138,7 +160,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
           title: _titleController.text,
           description: _descriptionController.text,
           categoryId: _selectedCategoryId!,
-          areaId: _selectedAreaId!,
+          areaId: areaId,
           price: double.tryParse(_priceController.text) ?? 0,
           images: existing.images, // Keep existing images
           features: features,
@@ -248,27 +270,52 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
               },
             ),
             const SizedBox(height: 16),
-            StreamBuilder<List<AreaModel>>(
-              stream: _areasRepo.getAreas(),
-              builder: (context, snapshot) {
-                final areas = snapshot.data ?? [];
-                return DropdownButtonFormField<String>(
-                  value: _selectedAreaId,
+            Autocomplete<AreaModel>(
+              displayStringForOption: (area) => area.name,
+              optionsBuilder: (textEditingValue) async {
+                if (textEditingValue.text.isEmpty) {
+                  return const Iterable<AreaModel>.empty();
+                }
+                
+                final areas = await _areasRepo.getAreasOnce();
+                return areas.where((area) {
+                  return area.name
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase());
+                });
+              },
+              onSelected: (area) {
+                _areaController.text = area.name;
+                _selectedAreaId = area.areaId;
+                _areaName = area.name;
+              },
+              fieldViewBuilder: (
+                context,
+                textEditingController,
+                focusNode,
+                onFieldSubmitted,
+              ) {
+                // Sync controller with our controller
+                if (_areaController.text != textEditingController.text) {
+                  textEditingController.text = _areaController.text;
+                }
+                
+                return TextFormField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
                   decoration: const InputDecoration(
-                    labelText: 'Area',
+                    labelText: 'Area (Type to search or add new)',
+                    hintText: 'e.g., Dubai Marina, Downtown Dubai',
                     border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.location_on),
                   ),
-                  items: areas.map((area) {
-                    return DropdownMenuItem<String>(
-                      value: area.areaId,
-                      child: Text(area.name),
-                    );
-                  }).toList(),
                   onChanged: (value) {
-                    setState(() => _selectedAreaId = value);
+                    _areaController.text = value;
+                    _areaName = value;
+                    _selectedAreaId = null; // Clear selection when typing
                   },
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Area is required';
                     }
                     return null;
