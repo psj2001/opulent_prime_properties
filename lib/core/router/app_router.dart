@@ -9,6 +9,7 @@ import 'package:opulent_prime_properties/features/home/presentation/pages/home_p
 import 'package:opulent_prime_properties/features/opportunities/presentation/pages/categories_page.dart';
 import 'package:opulent_prime_properties/features/opportunities/presentation/pages/category_listing_page.dart';
 import 'package:opulent_prime_properties/features/opportunities/presentation/pages/opportunity_detail_page.dart';
+import 'package:opulent_prime_properties/features/opportunities/presentation/pages/golden_visa_page.dart';
 import 'package:opulent_prime_properties/features/shortlist/presentation/pages/shortlist_page.dart';
 import 'package:opulent_prime_properties/features/consultation/presentation/pages/book_consultation_page.dart';
 import 'package:opulent_prime_properties/features/consultation/presentation/pages/booking_confirmation_page.dart';
@@ -112,6 +113,10 @@ class AppRouter {
       GoRoute(
         path: RouteNames.profile,
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: RouteNames.goldenVisa,
+        builder: (context, state) => const GoldenVisaPage(),
       ),
       
       // Admin Routes

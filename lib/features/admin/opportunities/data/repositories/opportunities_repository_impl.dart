@@ -126,5 +126,44 @@ class OpportunitiesRepository {
         .map((doc) => OpportunityModel.fromFirestore(doc))
         .toList();
   }
+
+  Stream<List<OpportunityModel>> getGoldenVisaOpportunities() {
+    // Golden Visa requires property value >= AED 2,000,000
+    // Note: Using only status filter to avoid composite index requirement
+    // We'll filter by price in memory
+    const minPrice = 2000000;
+    return _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .snapshots()
+        .map((snapshot) {
+          final opportunities = snapshot.docs
+              .map((doc) => OpportunityModel.fromFirestore(doc))
+              .where((opp) => opp.price >= minPrice) // Filter by price in memory
+              .toList();
+          // Sort by createdAt descending (newest first)
+          opportunities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return opportunities;
+        })
+        .asBroadcastStream();
+  }
+
+  Future<List<OpportunityModel>> getGoldenVisaOpportunitiesOnce() async {
+    // Golden Visa requires property value >= AED 2,000,000
+    // Note: Using only status filter to avoid composite index requirement
+    // We'll filter by price in memory
+    const minPrice = 2000000;
+    final snapshot = await _firestore
+        .collection(AppConstants.opportunitiesCollection)
+        .where('status', isEqualTo: AppConstants.opportunityStatusActive)
+        .get();
+    final opportunities = snapshot.docs
+        .map((doc) => OpportunityModel.fromFirestore(doc))
+        .where((opp) => opp.price >= minPrice) // Filter by price in memory
+        .toList();
+    // Sort by createdAt descending (newest first)
+    opportunities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return opportunities;
+  }
 }
 

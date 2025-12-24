@@ -16,6 +16,7 @@ class RouteNames {
   static const String services = '/services';
   static const String contact = '/contact';
   static const String profile = '/profile';
+  static const String goldenVisa = '/golden-visa';
   
   // Admin Routes
   static const String adminLogin = '/admin/login';
