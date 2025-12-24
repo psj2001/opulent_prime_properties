@@ -235,15 +235,32 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Lead Status Overview',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.analytics_outlined,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Lead Status Overview',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         StreamBuilder<List<LeadModel>>(
           stream: _leadsRepo.getLeads(),
           builder: (context, snapshot) {
@@ -264,8 +281,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               statusCounts[lead.status] = (statusCounts[lead.status] ?? 0) + 1;
             }
 
+            final totalLeads = leads.length;
+            
             return Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -279,39 +298,76 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               child: Column(
                 children: [
-                  _StatusItem(
-                    label: 'New',
-                    count: statusCounts[AppConstants.leadStatusNew]!,
-                    color: Colors.blue,
-                    icon: Icons.fiber_new,
-                  ),
-                  const Divider(),
-                  _StatusItem(
-                    label: 'Contacted',
-                    count: statusCounts[AppConstants.leadStatusContacted]!,
-                    color: Colors.orange,
-                    icon: Icons.phone,
-                  ),
-                  const Divider(),
-                  _StatusItem(
-                    label: 'Qualified',
-                    count: statusCounts[AppConstants.leadStatusQualified]!,
-                    color: Colors.purple,
-                    icon: Icons.verified,
-                  ),
-                  const Divider(),
-                  _StatusItem(
-                    label: 'Won',
-                    count: statusCounts[AppConstants.leadStatusWon]!,
-                    color: AppTheme.successColor,
-                    icon: Icons.check_circle,
-                  ),
-                  const Divider(),
-                  _StatusItem(
-                    label: 'Lost',
-                    count: statusCounts[AppConstants.leadStatusLost]!,
-                    color: AppTheme.errorColor,
-                    icon: Icons.cancel,
+                  // Grid layout for status cards
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 3.5,
+                    children: [
+                      _StatusCard(
+                        label: 'New',
+                        count: statusCounts[AppConstants.leadStatusNew]!,
+                        total: totalLeads,
+                        color: Colors.blue,
+                        icon: Icons.fiber_new,
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade400, Colors.blue.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      _StatusCard(
+                        label: 'Contacted',
+                        count: statusCounts[AppConstants.leadStatusContacted]!,
+                        total: totalLeads,
+                        color: Colors.orange,
+                        icon: Icons.phone,
+                        gradient: LinearGradient(
+                          colors: [Colors.orange.shade400, Colors.orange.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      _StatusCard(
+                        label: 'Qualified',
+                        count: statusCounts[AppConstants.leadStatusQualified]!,
+                        total: totalLeads,
+                        color: Colors.purple,
+                        icon: Icons.verified,
+                        gradient: LinearGradient(
+                          colors: [Colors.purple.shade400, Colors.purple.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      _StatusCard(
+                        label: 'Won',
+                        count: statusCounts[AppConstants.leadStatusWon]!,
+                        total: totalLeads,
+                        color: AppTheme.successColor,
+                        icon: Icons.check_circle,
+                        gradient: LinearGradient(
+                          colors: [AppTheme.successColor, Colors.green.shade700],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      _StatusCard(
+                        label: 'Lost',
+                        count: statusCounts[AppConstants.leadStatusLost]!,
+                        total: totalLeads,
+                        color: AppTheme.errorColor,
+                        icon: Icons.cancel,
+                        gradient: LinearGradient(
+                          colors: [AppTheme.errorColor, Colors.red.shade700],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -329,21 +385,51 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Recent Leads',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.recent_actors_outlined,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Recent Leads',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => context.push(RouteNames.adminLeads),
-              child: const Text('View All'),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton.icon(
+                onPressed: () => context.push(RouteNames.adminLeads),
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: const Text(
+                  'View All',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.primaryColor,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         StreamBuilder<List<LeadModel>>(
           stream: _leadsRepo.getLeads(),
           builder: (context, snapshot) {
@@ -365,13 +451,36 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             final leads = snapshot.data ?? [];
             if (leads.isEmpty) {
               return Container(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(48),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: const Center(
-                  child: Text('No leads yet'),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 64,
+                        color: AppTheme.textSecondary.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No leads yet',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -381,12 +490,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -402,7 +511,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           context.push('${RouteNames.adminLeadDetail}/${lead.leadId}');
                         },
                       ),
-                      if (index < recentLeads.length - 1) const Divider(height: 1),
+                      if (index < recentLeads.length - 1)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                          ),
+                        ),
                     ],
                   );
                 }).toList(),
@@ -418,46 +534,83 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.flash_on_outlined,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 2.5,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 3.2,
           children: [
             _QuickActionCard(
               title: 'Add Opportunity',
               icon: Icons.add_business,
               color: AppTheme.primaryColor,
               onTap: () => context.push(RouteNames.adminOpportunityNew),
+              gradient: LinearGradient(
+                colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
             _QuickActionCard(
               title: 'Manage Categories',
               icon: Icons.category,
               color: AppTheme.secondaryColor,
               onTap: () => context.push(RouteNames.adminCategories),
+              gradient: LinearGradient(
+                colors: [AppTheme.secondaryColor, AppTheme.secondaryColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
             _QuickActionCard(
               title: 'Manage Consultants',
               icon: Icons.person_add,
               color: AppTheme.accentColor,
               onTap: () => context.push(RouteNames.adminConsultants),
+              gradient: LinearGradient(
+                colors: [AppTheme.accentColor, AppTheme.accentColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
             _QuickActionCard(
               title: 'View All Leads',
               icon: Icons.list_alt,
               color: AppTheme.successColor,
               onTap: () => context.push(RouteNames.adminLeads),
+              gradient: LinearGradient(
+                colors: [AppTheme.successColor, AppTheme.successColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ],
         ),
@@ -563,59 +716,90 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _StatusItem extends StatelessWidget {
+class _StatusCard extends StatelessWidget {
   final String label;
   final int count;
+  final int total;
   final Color color;
   final IconData icon;
+  final Gradient gradient;
 
-  const _StatusItem({
+  const _StatusCard({
     required this.label,
     required this.count,
+    required this.total,
     required this.color,
     required this.icon,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    final percentage = total > 0 ? (count / total * 100).toStringAsFixed(0) : '0';
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$percentage%',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -647,24 +831,65 @@ class _RecentLeadItem extends StatelessWidget {
     }
   }
 
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case AppConstants.leadStatusNew:
+        return Icons.fiber_new;
+      case AppConstants.leadStatusContacted:
+        return Icons.phone;
+      case AppConstants.leadStatusQualified:
+        return Icons.verified;
+      case AppConstants.leadStatusWon:
+        return Icons.check_circle;
+      case AppConstants.leadStatusLost:
+        return Icons.cancel;
+      default:
+        return Icons.person;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final statusColor = _getStatusColor(lead.status);
+    
     return InkWell(
       onTap: onTap,
-      child: Padding(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: statusColor.withOpacity(0.2),
+            width: 1.5,
+          ),
+        ),
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: _getStatusColor(lead.status).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    statusColor.withOpacity(0.2),
+                    statusColor.withOpacity(0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: statusColor.withOpacity(0.3),
+                  width: 1.5,
+                ),
               ),
               child: Icon(
-                Icons.person,
-                color: _getStatusColor(lead.status),
+                _getStatusIcon(lead.status),
+                color: statusColor,
+                size: 28,
               ),
             ),
             const SizedBox(width: 16),
@@ -677,47 +902,74 @@ class _RecentLeadItem extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
-                        Icons.label_outline,
-                        size: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        lead.status.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _getStatusColor(lead.status),
-                          fontWeight: FontWeight.w600,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.label_outline,
+                              size: 12,
+                              color: statusColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              lead.status.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormatter.formatDate(lead.createdAt),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                        ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: AppTheme.textSecondary.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateFormatter.formatDate(lead.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary.withOpacity(0.7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppTheme.textSecondary,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: statusColor,
+              ),
             ),
           ],
         ),
@@ -731,51 +983,66 @@ class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final Gradient gradient;
 
   const _QuickActionCard({
     required this.title,
     required this.icon,
     required this.color,
     required this.onTap,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
+            gradient: gradient,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: color),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
             ],
           ),
         ),

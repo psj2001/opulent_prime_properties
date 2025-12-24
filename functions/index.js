@@ -27,8 +27,7 @@ exports.onCreateConsultation = functions.firestore
       
       await db.collection('leads').add(leadData);
       
-      // Send notification to admin
-      // TODO: Implement notification sending
+      // Admin notification will be sent by onCreateLead trigger
       
       console.log(`Lead created for consultation: ${consultationId}`);
       return null;
@@ -118,6 +117,8 @@ exports.createLeadForConsultation = functions.https.onCall(async (data, context)
     
     const leadRef = await db.collection('leads').add(leadData);
     
+    // Admin notification will be sent by onCreateLead trigger
+    
     console.log(`Lead created for consultation: ${consultationId}, leadId: ${leadRef.id}`);
     return { success: true, leadId: leadRef.id };
   } catch (error) {
@@ -163,6 +164,8 @@ exports.shareShortlist = functions.https.onCall(async (data, context) => {
     
     const leadRef = await db.collection('leads').add(leadData);
     
+    // Admin notification will be sent by onCreateLead trigger
+    
     // Generate shareable link (you can customize this)
     const shareLink = `https://yourapp.com/shortlist/${leadRef.id}`;
     
@@ -177,6 +180,26 @@ exports.shareShortlist = functions.https.onCall(async (data, context) => {
 });
 
 /**
+ * Gets all admin users
+ * Helper function to retrieve all admin users from Firestore
+ */
+async function getAllAdmins() {
+  try {
+    const adminUsers = await db.collection('users')
+      .where('isAdmin', '==', true)
+      .get();
+    
+    return adminUsers.docs.map(doc => ({
+      userId: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error getting admin users:', error);
+    return [];
+  }
+}
+
+/**
  * Sends notification to user
  * Helper function for sending notifications
  */
@@ -184,15 +207,15 @@ async function sendNotification(userId, title, body, type) {
   try {
     // Get user's FCM token
     const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.data();
-    const fcmToken = userData ? userData.fcmToken : null;
-    
-    if (!fcmToken) {
-      console.log(`No FCM token for user: ${userId}`);
+    if (!userDoc.exists) {
+      console.log(`User not found: ${userId}`);
       return;
     }
     
-    // Create notification document
+    const userData = userDoc.data();
+    const fcmToken = userData ? userData.fcmToken : null;
+    
+    // Create notification document (even if no FCM token, so it appears in app)
     await db.collection('notifications').add({
       userId: userId,
       title: title,
@@ -202,19 +225,50 @@ async function sendNotification(userId, title, body, type) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     
-    // Send FCM notification
-    const message = {
-      notification: {
-        title: title,
-        body: body,
-      },
-      token: fcmToken,
-    };
-    
-    await admin.messaging().send(message);
-    console.log(`Notification sent to user: ${userId}`);
+    // Send FCM notification if token exists
+    if (fcmToken) {
+      const message = {
+        notification: {
+          title: title,
+          body: body,
+        },
+        token: fcmToken,
+      };
+      
+      await admin.messaging().send(message);
+      console.log(`FCM notification sent to user: ${userId}`);
+    } else {
+      console.log(`Notification document created for user: ${userId} (no FCM token)`);
+    }
   } catch (error) {
     console.error('Error sending notification:', error);
+  }
+}
+
+/**
+ * Notifies all admin users
+ * Helper function to send notifications to all admins
+ */
+async function notifyAllAdmins(title, body, type) {
+  try {
+    const admins = await getAllAdmins();
+    
+    if (admins.length === 0) {
+      console.log('No admin users found');
+      return;
+    }
+    
+    console.log(`Notifying ${admins.length} admin(s) about new lead`);
+    
+    // Send notification to each admin
+    const notificationPromises = admins.map(admin => 
+      sendNotification(admin.userId, title, body, type)
+    );
+    
+    await Promise.all(notificationPromises);
+    console.log(`Notifications sent to all admins`);
+  } catch (error) {
+    console.error('Error notifying admins:', error);
   }
 }
 
@@ -239,6 +293,53 @@ exports.onConsultationConfirmed = functions.firestore
     }
     
     return null;
+  });
+
+/**
+ * Notifies admins when a new lead is created
+ * Triggered when a new lead document is created
+ * This ensures admins are notified regardless of how the lead was created
+ */
+exports.onCreateLead = functions.firestore
+  .document('leads/{leadId}')
+  .onCreate(async (snap, context) => {
+    const lead = snap.data();
+    const leadId = context.params.leadId;
+    
+    try {
+      // Get user information for the lead
+      let userName = 'Unknown User';
+      try {
+        const userDoc = await db.collection('users').doc(lead.userId).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          userName = userData.name || userData.email || 'Unknown User';
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+      
+      // Determine source description
+      const sourceDescription = lead.source === 'consultation' 
+        ? 'consultation booking' 
+        : lead.source === 'shortlist' 
+        ? 'shared shortlist' 
+        : lead.source || 'unknown source';
+      
+      // Send notification to all admins
+      await notifyAllAdmins(
+        'New Lead Created',
+        `New lead from ${userName} (${sourceDescription}). Lead ID: ${leadId.substring(0, 8)}...`,
+        'new_lead'
+      );
+      
+      console.log(`Admin notification sent for new lead: ${leadId}`);
+      return null;
+    } catch (error) {
+      console.error('Error notifying admins about new lead:', error);
+      // Don't throw error - lead creation should still succeed
+      return null;
+    }
   });
 
 /**
