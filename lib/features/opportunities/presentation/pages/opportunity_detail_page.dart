@@ -2,15 +2,123 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
+import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/areas_repository_impl.dart';
+import 'package:opulent_prime_properties/features/shortlist/data/repositories/shortlist_repository_impl.dart';
 import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
 
-class OpportunityDetailPage extends StatelessWidget {
+class OpportunityDetailPage extends StatefulWidget {
   final String opportunityId;
   
   const OpportunityDetailPage({super.key, required this.opportunityId});
+
+  @override
+  State<OpportunityDetailPage> createState() => _OpportunityDetailPageState();
+}
+
+class _OpportunityDetailPageState extends State<OpportunityDetailPage> {
+  final _shortlistRepo = ShortlistRepository();
+  bool _isInShortlist = false;
+  bool _isLoadingShortlist = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkShortlistStatus();
+  }
+
+  Future<void> _checkShortlistStatus() async {
+    final user = FirebaseConfig.auth.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _isLoadingShortlist = true;
+    });
+
+    try {
+      final isInShortlist = await _shortlistRepo.isInShortlist(
+        user.uid,
+        widget.opportunityId,
+      );
+      if (mounted) {
+        setState(() {
+          _isInShortlist = isInShortlist;
+          _isLoadingShortlist = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingShortlist = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleShortlistToggle() async {
+    final user = FirebaseConfig.auth.currentUser;
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please sign in to add items to your shortlist'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isLoadingShortlist = true;
+    });
+
+    try {
+      if (_isInShortlist) {
+        await _shortlistRepo.removeFromShortlist(user.uid, widget.opportunityId);
+        if (mounted) {
+          setState(() {
+            _isInShortlist = false;
+            _isLoadingShortlist = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Removed from shortlist'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        await _shortlistRepo.addToShortlist(user.uid, widget.opportunityId);
+        if (mounted) {
+          setState(() {
+            _isInShortlist = true;
+            _isLoadingShortlist = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Added to shortlist'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingShortlist = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +130,7 @@ class OpportunityDetailPage extends StatelessWidget {
     );
     
     return FutureBuilder<OpportunityModel?>(
-      future: opportunitiesRepo.getOpportunity(opportunityId),
+      future: opportunitiesRepo.getOpportunity(widget.opportunityId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -186,11 +294,18 @@ class OpportunityDetailPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                            // TODO: Add to shortlist
-                          },
-                          icon: const Icon(Icons.favorite_border),
-                          label: const Text('Shortlist'),
+                          onPressed: _isLoadingShortlist ? null : _handleShortlistToggle,
+                          icon: _isLoadingShortlist
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Icon(_isInShortlist ? Icons.favorite : Icons.favorite_border),
+                          label: Text(_isInShortlist ? 'In Shortlist' : 'Shortlist'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _isInShortlist ? Colors.red : null,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -198,7 +313,7 @@ class OpportunityDetailPage extends StatelessWidget {
                         flex: 2,
                         child: ElevatedButton(
                           onPressed: () {
-                            context.push('${RouteNames.bookConsultation}?opportunityId=$opportunityId');
+                            context.push('${RouteNames.bookConsultation}?opportunityId=${widget.opportunityId}');
                           },
                           child: const Text('Book Consultation'),
                         ),
