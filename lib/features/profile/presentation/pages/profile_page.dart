@@ -107,11 +107,49 @@ class ProfilePage extends StatelessWidget {
             );
           } else {
             return Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate to login
-                },
-                child: const Text('Sign In'),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.person_outline,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Please sign in to access your profile',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.push(RouteNames.login);
+                        },
+                        child: const Text('Sign In'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          context.push(RouteNames.signup);
+                        },
+                        child: const Text('Sign Up'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }

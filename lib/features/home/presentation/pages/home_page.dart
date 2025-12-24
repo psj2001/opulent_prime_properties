@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
+import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
 import 'package:intl/intl.dart';
 
@@ -15,9 +17,21 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Opulent Prime Properties'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => context.push(RouteNames.profile),
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              if (state is AuthAuthenticated) {
+                return IconButton(
+                  icon: const Icon(Icons.person),
+                  onPressed: () => context.push(RouteNames.profile),
+                );
+              } else {
+                return IconButton(
+                  icon: const Icon(Icons.login),
+                  tooltip: 'Sign In',
+                  onPressed: () => context.push(RouteNames.login),
+                );
+              }
+            },
           ),
         ],
       ),

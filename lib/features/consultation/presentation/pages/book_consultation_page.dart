@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:opulent_prime_properties/core/constants/app_constants.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
+import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/utils/validators.dart';
+import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:opulent_prime_properties/features/consultation/data/repositories/consultation_repository_impl.dart';
+import 'package:opulent_prime_properties/shared/models/consultation_model.dart';
 
 class BookConsultationPage extends StatefulWidget {
   final String? opportunityId;
@@ -18,8 +24,11 @@ class _BookConsultationPageState extends State<BookConsultationPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _consultationRepository = ConsultationRepository();
+  bool _isLoading = false;
   DateTime? _selectedDate;
   String? _selectedTime;
+  bool _userDataLoaded = false;
 
   final List<String> _timeSlots = [
     '09:00 AM',
@@ -31,6 +40,27 @@ class _BookConsultationPageState extends State<BookConsultationPage> {
     '04:00 PM',
     '05:00 PM',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    if (_userDataLoaded) return;
+    
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      final user = authState.user;
+      _nameController.text = user.name;
+      _emailController.text = user.email;
+      if (user.phone != null) {
+        _phoneController.text = user.phone!;
+      }
+      _userDataLoaded = true;
+    }
+  }
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -46,14 +76,110 @@ class _BookConsultationPageState extends State<BookConsultationPage> {
     }
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate() && _selectedDate != null && _selectedTime != null) {
-      // TODO: Submit consultation booking
-      context.push(RouteNames.bookingConfirmation);
-    } else {
+  Future<void> _showAuthDialog() async {
+    if (!mounted) return;
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Account Required'),
+        content: const Text(
+          'You need an account to book a consultation. Would you like to create an account or login?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'signup'),
+            child: const Text('Sign Up'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'login'),
+            child: const Text('Login'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'signup') {
+      if (mounted) {
+        context.push(RouteNames.signup);
+      }
+    } else if (result == 'login') {
+      if (mounted) {
+        context.push(RouteNames.login);
+      }
+    }
+  }
+
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
       );
+      return;
+    }
+
+    // Check if user is authenticated
+    final authState = context.read<AuthBloc>().state;
+    String? userId;
+    
+    if (authState is AuthAuthenticated) {
+      userId = authState.user.userId;
+    } else {
+      // If not authenticated, try to get current user from Firebase Auth
+      final currentUser = FirebaseConfig.auth.currentUser;
+      if (currentUser == null) {
+        // Show dialog with options to login/signup
+        if (mounted) {
+          await _showAuthDialog();
+        }
+        return;
+      }
+      userId = currentUser.uid;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Create consultation model
+      final consultation = ConsultationModel(
+        consultationId: '', // Will be set by Firestore
+        userId: userId!,
+        opportunityId: widget.opportunityId,
+        preferredDate: _selectedDate!,
+        preferredTime: _selectedTime!,
+        status: AppConstants.consultationStatusPending,
+        createdAt: DateTime.now(),
+      );
+
+      // Save consultation to Firestore
+      await _consultationRepository.createConsultation(consultation);
+
+      if (mounted) {
+        // Navigate to confirmation page
+        context.push(RouteNames.bookingConfirmation);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error booking consultation: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -164,8 +290,17 @@ class _BookConsultationPageState extends State<BookConsultationPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Book Consultation'),
+                onPressed: _isLoading ? null : _submit,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Book Consultation'),
               ),
             ),
           ],

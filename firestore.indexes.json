@@ -111,6 +111,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "source",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "leads",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "consultantId",
           "order": "ASCENDING"
         },

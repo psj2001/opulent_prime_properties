@@ -61,10 +61,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Leads collection - NO direct client writes, only Cloud Functions
+    // Leads collection - Allow authenticated users to create (workaround for Spark plan)
+    // Note: In production with Blaze plan, use Cloud Functions instead
     match /leads/{leadId} {
       allow read: if isAdmin();
-      allow create: if false;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

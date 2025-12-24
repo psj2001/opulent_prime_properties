@@ -39,6 +39,97 @@ exports.onCreateConsultation = functions.firestore
   });
 
 /**
+ * Creates a lead for a consultation (callable function - backup method)
+ * Can be called from client if trigger function fails
+ */
+exports.createLeadForConsultation = functions.https.onCall(async (data, context) => {
+  // Verify user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated'
+    );
+  }
+  
+  const { consultationId, userId } = data;
+  
+  if (!consultationId || !userId) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing consultationId or userId'
+    );
+  }
+  
+  // Verify the consultation exists and belongs to the user
+  const consultationDoc = await db.collection('consultations').doc(consultationId).get();
+  if (!consultationDoc.exists) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      'Consultation not found'
+    );
+  }
+  
+  const consultation = consultationDoc.data();
+  // Verify the consultation belongs to the authenticated user
+  if (consultation.userId !== context.auth.uid) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Not authorized to create lead for this consultation'
+    );
+  }
+  
+  // Ensure userId matches
+  if (consultation.userId !== userId) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'userId does not match consultation'
+    );
+  }
+  
+  try {
+    // Check if lead already exists for this consultation
+    const existingLeads = await db.collection('leads')
+      .where('userId', '==', userId)
+      .where('source', '==', 'consultation')
+      .get();
+    
+    // Check if there's already a lead created recently (within last 5 minutes)
+    const now = admin.firestore.Timestamp.now();
+    const fiveMinutesAgo = admin.firestore.Timestamp.fromMillis(now.toMillis() - 5 * 60 * 1000);
+    
+    const recentLead = existingLeads.docs.find(doc => {
+      const leadData = doc.data();
+      return leadData.createdAt && leadData.createdAt.toMillis() > fiveMinutesAgo.toMillis();
+    });
+    
+    if (recentLead) {
+      console.log(`Lead already exists for consultation: ${consultationId}`);
+      return { success: true, leadId: recentLead.id, alreadyExists: true };
+    }
+    
+    // Create lead document
+    const leadData = {
+      userId: userId,
+      source: 'consultation',
+      status: 'new',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    
+    const leadRef = await db.collection('leads').add(leadData);
+    
+    console.log(`Lead created for consultation: ${consultationId}, leadId: ${leadRef.id}`);
+    return { success: true, leadId: leadRef.id };
+  } catch (error) {
+    console.error('Error creating lead:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to create lead'
+    );
+  }
+});
+
+/**
  * Creates a lead when a shortlist is shared
  * Called from client via callable function
  */
@@ -93,7 +184,8 @@ async function sendNotification(userId, title, body, type) {
   try {
     // Get user's FCM token
     const userDoc = await db.collection('users').doc(userId).get();
-    const fcmToken = userDoc.data()?.fcmToken;
+    const userData = userDoc.data();
+    const fcmToken = userData ? userData.fcmToken : null;
     
     if (!fcmToken) {
       console.log(`No FCM token for user: ${userId}`);
