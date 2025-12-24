@@ -123,8 +123,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserEntity> signUpWithEmailAndPassword(
     String email,
     String password,
-    String name,
-  ) async {
+    String name, {
+    bool isAdmin = false,
+  }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -142,6 +143,7 @@ class AuthRepositoryImpl implements AuthRepository {
         name: name,
         createdAt: now,
         updatedAt: now,
+        isAdmin: isAdmin,
       );
 
       await _firestore
@@ -189,6 +191,7 @@ class AuthRepositoryImpl implements AuthRepository {
             name: name,
             createdAt: now,
             updatedAt: now,
+            isAdmin: isAdmin,
           );
           await _firestore
               .collection(AppConstants.usersCollection)

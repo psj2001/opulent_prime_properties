@@ -46,6 +46,13 @@ class AdminDashboardPage extends StatelessWidget {
             color: AppTheme.accentColor,
             onTap: () => context.push(RouteNames.adminConsultants),
           ),
+          _DashboardCard(
+            title: 'Settings',
+            count: '',
+            icon: Icons.settings,
+            color: Colors.grey,
+            onTap: () => context.push(RouteNames.adminSettings),
+          ),
         ],
       ),
     );
@@ -79,15 +86,17 @@ class _DashboardCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 48, color: color),
-              const SizedBox(height: 16),
-              Text(
-                count,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              if (count.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  count,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 8),
               Text(
                 title,

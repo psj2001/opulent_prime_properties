@@ -71,6 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.email,
         event.password,
         event.name,
+        isAdmin: event.isAdmin,
       );
       emit(AuthAuthenticated(user));
     } catch (e) {

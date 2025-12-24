@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/pages/admin_login_page.dart';
+import 'package:opulent_prime_properties/features/auth/presentation/pages/login_page.dart';
+import 'package:opulent_prime_properties/features/auth/presentation/pages/signup_page.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/pages/splash_page.dart';
 import 'package:opulent_prime_properties/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:opulent_prime_properties/features/home/presentation/pages/home_page.dart';
@@ -38,6 +40,16 @@ class AppRouter {
       GoRoute(
         path: RouteNames.onboarding,
         builder: (context, state) => const OnboardingPage(),
+      ),
+      
+      // Authentication
+      GoRoute(
+        path: RouteNames.login,
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: RouteNames.signup,
+        builder: (context, state) => const SignupPage(),
       ),
       
       // Mobile App Routes

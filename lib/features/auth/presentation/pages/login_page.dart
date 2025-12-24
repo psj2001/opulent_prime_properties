@@ -5,14 +5,14 @@ import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/utils/validators.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 
-class AdminLoginPage extends StatefulWidget {
-  const AdminLoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<AdminLoginPage> createState() => _AdminLoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _AdminLoginPageState extends State<AdminLoginPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -44,9 +44,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             if (state.user.isAdmin) {
               context.go(RouteNames.adminDashboard);
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Access denied. Admin only.')),
-              );
+              context.go(RouteNames.home);
             }
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -63,12 +61,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.admin_panel_settings,
+                    Icons.login,
                     size: 80,
+                    color: Colors.blue,
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Admin Login',
+                    'Login',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -80,6 +79,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
@@ -90,6 +90,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     decoration: const InputDecoration(
                       labelText: 'Password',
                       prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: Validators.password,
@@ -114,7 +115,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     onPressed: () {
                       context.push(RouteNames.signup);
                     },
-                    child: const Text('Create Admin Account'),
+                    child: const Text('Don\'t have an account? Sign Up'),
                   ),
                 ],
               ),
