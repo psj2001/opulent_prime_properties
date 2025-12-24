@@ -17,6 +17,12 @@ class AppConstants {
   // Storage
   static const String opportunityImagesPath = 'opportunities';
   
+  // Cloudinary Configuration
+  static const String cloudinaryCloudName = 'dzp3hv4fy';
+  static const String cloudinaryApiKey = '421671167788767';
+  static const String cloudinaryApiSecret = ''; // Not needed for unsigned uploads with preset
+  static const String cloudinaryUploadPreset = 'opportunity_images';
+  
   // Shared Preferences Keys
   static const String onboardingCompletedKey = 'onboarding_completed';
   static const String isAdminKey = 'is_admin';
