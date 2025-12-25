@@ -395,3 +395,46 @@ exports.assignConsultant = functions.https.onCall(async (data, context) => {
   }
 });
 
+/**
+ * Sends notification to a user (admin function)
+ * Called from admin panel to send custom notifications
+ */
+exports.sendNotificationToUser = functions.https.onCall(async (data, context) => {
+  // Verify user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated'
+    );
+  }
+  
+  // Verify user is admin
+  const adminUserDoc = await db.collection('users').doc(context.auth.uid).get();
+  if (!adminUserDoc.exists || !adminUserDoc.data()?.isAdmin) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Only admins can send notifications'
+    );
+  }
+  
+  const { userId, title, body, type } = data;
+  
+  if (!userId || !title || !body) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing required fields: userId, title, and body are required'
+    );
+  }
+  
+  try {
+    await sendNotification(userId, title, body, type || 'admin_notification');
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to send notification'
+    );
+  }
+});
+

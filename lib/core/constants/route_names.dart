@@ -20,6 +20,7 @@ class RouteNames {
   static const String blog = '/blog';
   static const String blogDetail = '/blog-detail';
   static const String aboutUs = '/about-us';
+  static const String notifications = '/notifications';
   
   // Admin Routes
   static const String adminLogin = '/admin/login';
@@ -33,5 +34,6 @@ class RouteNames {
   static const String adminLeadDetail = '/admin/leads/detail';
   static const String adminConsultants = '/admin/consultants';
   static const String adminSettings = '/admin/settings';
+  static const String adminSendNotification = '/admin/notifications/send';
 }
 

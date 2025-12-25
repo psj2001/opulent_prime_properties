@@ -29,6 +29,8 @@ import 'package:opulent_prime_properties/features/admin/leads/presentation/pages
 import 'package:opulent_prime_properties/features/admin/leads/presentation/pages/lead_detail_page.dart';
 import 'package:opulent_prime_properties/features/admin/consultants/presentation/pages/consultants_page.dart';
 import 'package:opulent_prime_properties/features/admin/settings/presentation/pages/admin_settings_page.dart';
+import 'package:opulent_prime_properties/features/admin/notifications/presentation/pages/send_notification_page.dart';
+import 'package:opulent_prime_properties/features/notifications/presentation/pages/notifications_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -136,6 +138,10 @@ class AppRouter {
         path: RouteNames.aboutUs,
         builder: (context, state) => const AboutUsPage(),
       ),
+      GoRoute(
+        path: RouteNames.notifications,
+        builder: (context, state) => const NotificationsPage(),
+      ),
       
       // Admin Routes
       GoRoute(
@@ -187,6 +193,10 @@ class AppRouter {
       GoRoute(
         path: RouteNames.adminSettings,
         builder: (context, state) => const AdminSettingsPage(),
+      ),
+      GoRoute(
+        path: RouteNames.adminSendNotification,
+        builder: (context, state) => const SendNotificationPage(),
       ),
     ],
   );

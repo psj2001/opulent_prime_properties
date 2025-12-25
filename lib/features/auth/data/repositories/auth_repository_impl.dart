@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:opulent_prime_properties/core/constants/app_constants.dart';
 import 'package:opulent_prime_properties/core/errors/exceptions.dart';
 import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
+import 'package:opulent_prime_properties/core/services/fcm_token_service.dart';
 import 'package:opulent_prime_properties/features/auth/domain/entities/user_entity.dart';
 import 'package:opulent_prime_properties/features/auth/domain/repositories/auth_repository.dart';
 import 'package:opulent_prime_properties/shared/models/user_model.dart';
@@ -46,6 +47,11 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final userModel = UserModel.fromFirestore(userDoc);
+      
+      // Save FCM token asynchronously (don't block login)
+      FCMTokenService.saveFCMToken(userId);
+      FCMTokenService.listenForTokenRefresh(userId);
+      
       return UserEntity(
         userId: userModel.userId,
         email: userModel.email,
@@ -151,6 +157,10 @@ class AuthRepositoryImpl implements AuthRepository {
           .doc(credential.user!.uid)
           .set(userModel.toFirestore());
 
+      // Save FCM token asynchronously (don't block signup)
+      FCMTokenService.saveFCMToken(credential.user!.uid);
+      FCMTokenService.listenForTokenRefresh(credential.user!.uid);
+
       return UserEntity(
         userId: userModel.userId,
         email: userModel.email,
@@ -197,6 +207,11 @@ class AuthRepositoryImpl implements AuthRepository {
               .collection(AppConstants.usersCollection)
               .doc(userModel.userId)
               .set(userModel.toFirestore());
+          
+          // Save FCM token asynchronously (don't block signup)
+          FCMTokenService.saveFCMToken(userModel.userId);
+          FCMTokenService.listenForTokenRefresh(userModel.userId);
+          
           return UserEntity(
             userId: userModel.userId,
             email: userModel.email,

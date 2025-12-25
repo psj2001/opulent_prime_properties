@@ -611,6 +611,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 end: Alignment.bottomRight,
               ),
             ),
+            _QuickActionCard(
+              title: 'Send Notification',
+              icon: Icons.notifications_active,
+              color: Colors.deepPurple,
+              onTap: () => context.push(RouteNames.adminSendNotification),
+              gradient: LinearGradient(
+                colors: [Colors.deepPurple, Colors.deepPurple.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
           ],
         ),
       ],

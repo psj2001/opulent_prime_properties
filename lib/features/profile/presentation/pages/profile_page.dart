@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:opulent_prime_properties/features/notifications/data/repositories/notifications_repository_impl.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -155,6 +156,17 @@ class ProfilePage extends StatelessWidget {
                         iconColor: AppTheme.successColor,
                         onTap: () {
                           // TODO: Navigate to consultations
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _ProfileMenuItemWithBadge(
+                        icon: Icons.notifications_outlined,
+                        title: 'Notifications',
+                        subtitle: 'View your notifications',
+                        iconColor: AppTheme.primaryColor,
+                        userId: user.userId,
+                        onTap: () {
+                          context.push(RouteNames.notifications);
                         },
                       ),
                       const SizedBox(height: 12),
@@ -418,6 +430,127 @@ class _ProfileMenuItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ProfileMenuItemWithBadge extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color iconColor;
+  final String userId;
+  final VoidCallback onTap;
+
+  const _ProfileMenuItemWithBadge({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.iconColor,
+    required this.userId,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = NotificationsRepository();
+    
+    return StreamBuilder<int>(
+      stream: repository.getUnreadCount(userId),
+      builder: (context, snapshot) {
+        final unreadCount = snapshot.data ?? 0;
+        
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: iconColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: iconColor,
+                            size: 24,
+                          ),
+                        ),
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
