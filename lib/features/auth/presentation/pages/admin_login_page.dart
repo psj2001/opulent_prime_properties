@@ -15,8 +15,10 @@ class AdminLoginPage extends StatefulWidget {
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isCreatingAccount = false;
 
   // Colors matching the design
   static const Color teal = Color(0xFF2D7A8C);
@@ -26,6 +28,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -33,12 +36,23 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      context.read<AuthBloc>().add(
-            SignInRequested(
-              email: _emailController.text,
-              password: _passwordController.text,
-            ),
-          );
+      if (_isCreatingAccount) {
+        context.read<AuthBloc>().add(
+              SignUpRequested(
+                email: _emailController.text,
+                password: _passwordController.text,
+                name: _nameController.text,
+                isAdmin: true,
+              ),
+            );
+      } else {
+        context.read<AuthBloc>().add(
+              SignInRequested(
+                email: _emailController.text,
+                password: _passwordController.text,
+              ),
+            );
+      }
     }
   }
 
@@ -142,17 +156,95 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'PLEASE LOGIN TO ADMIN DASHBOARD.',
-                            style: TextStyle(
+                          Text(
+                            _isCreatingAccount
+                                ? 'CREATE ADMIN ACCOUNT'
+                                : 'PLEASE LOGIN TO ADMIN DASHBOARD.',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w300,
                               letterSpacing: 1.0,
                             ),
                           ),
-                          const SizedBox(height: 60),
-                          // Username field
+                          const SizedBox(height: 40),
+                          // Toggle between login and create account
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildToggleButton(
+                                  'Login',
+                                  !_isCreatingAccount,
+                                  () {
+                                    setState(() {
+                                      _isCreatingAccount = false;
+                                    });
+                                  },
+                                ),
+                                _buildToggleButton(
+                                  'Create Account',
+                                  _isCreatingAccount,
+                                  () {
+                                    setState(() {
+                                      _isCreatingAccount = true;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          // Name field (only shown when creating account)
+                          if (_isCreatingAccount) ...[
+                            TextFormField(
+                              controller: _nameController,
+                              style: const TextStyle(color: Colors.black87),
+                              decoration: InputDecoration(
+                                hintText: 'FULL NAME',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                  letterSpacing: 1.0,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: grayBorder,
+                                    width: 1,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: grayBorder,
+                                    width: 1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: const BorderSide(
+                                    color: grayBorder,
+                                    width: 1,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) => Validators.required(value, fieldName: 'Name'),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                          // Email field
                           TextFormField(
                             controller: _emailController,
                             style: const TextStyle(color: Colors.black87),
@@ -238,7 +330,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             validator: Validators.password,
                           ),
                           const SizedBox(height: 40),
-                          // Login button
+                          // Login/Create Account button
                           BlocBuilder<AuthBloc, AuthState>(
                             builder: (context, state) {
                               return SizedBox(
@@ -259,9 +351,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                           size: 20,
                                           color: Colors.white,
                                         )
-                                      : const Text(
-                                          'LOGIN',
-                                          style: TextStyle(
+                                      : Text(
+                                          _isCreatingAccount ? 'CREATE ACCOUNT' : 'LOGIN',
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
                                             letterSpacing: 1.5,
@@ -271,27 +363,29 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                               );
                             },
                           ),
-                          const SizedBox(height: 30),
-                          // Forgot password link
-                          TextButton(
-                            onPressed: () {
-                              // TODO: Implement forgot password functionality
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: const Text(
-                              'FORGOTTEN YOUR PASSWORD?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w300,
-                                letterSpacing: 1.0,
+                          if (!_isCreatingAccount) ...[
+                            const SizedBox(height: 30),
+                            // Forgot password link
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Implement forgot password functionality
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'FORGOTTEN YOUR PASSWORD?',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w300,
+                                  letterSpacing: 1.0,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -303,6 +397,28 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         ),
       ),
     ),
+    );
+  }
+
+  Widget _buildToggleButton(String text, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? orange : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            letterSpacing: 1.0,
+          ),
+        ),
+      ),
     );
   }
 }

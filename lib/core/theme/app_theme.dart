@@ -60,6 +60,12 @@ class AppTheme {
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
       ),
+      iconTheme: const IconThemeData(
+        color: textPrimary,
+      ),
+      primaryIconTheme: const IconThemeData(
+        color: Colors.white,
+      ),
     );
   }
   
@@ -76,6 +82,12 @@ class AppTheme {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+      ),
+      iconTheme: const IconThemeData(
+        color: textPrimary,
+      ),
+      primaryIconTheme: const IconThemeData(
+        color: Colors.white,
       ),
     );
   }

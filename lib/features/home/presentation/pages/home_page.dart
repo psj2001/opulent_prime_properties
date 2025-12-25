@@ -7,6 +7,7 @@ import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:opulent_prime_properties/features/notifications/data/repositories/notifications_repository_impl.dart';
 import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
 import 'package:intl/intl.dart';
 
@@ -129,13 +130,87 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true, 
       backgroundColor:  AppTheme.accentColor,
+      appBar: AppBar(
+        
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const SizedBox.shrink(),
+        actions: [
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthAuthenticated) {
+                return const SizedBox.shrink();
+              }
+              
+              final userId = authState.user.userId;
+              final repository = NotificationsRepository();
+              
+              return StreamBuilder<int>(
+                stream: repository.getUnreadCount(userId),
+                builder: (context, snapshot) {
+                  final unreadCount = snapshot.data ?? 0;
+                  
+                  return IconButton(
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                unreadCount > 99 ? '99+' : '$unreadCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onPressed: () {
+                      context.push(RouteNames.notifications);
+                    },
+                    tooltip: 'Notifications',
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SingleChildScrollView(
         
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Why Dubai Section
+          
+             // Why Dubai Section
             _WhyDubaiSection(
               fadeAnimation: _heroFadeAnimation,
               scaleAnimation: _heroScaleAnimation,
@@ -268,7 +343,8 @@ class _WhyDubaiSection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tagline
+                      SizedBox(height: kToolbarHeight), // To offset for AppBar
+                       // Tagline
                       const Text(
                         'Invest in Dubai',
                         style: TextStyle(
@@ -666,10 +742,23 @@ class _StaticQuickActions extends StatelessWidget {
   const _StaticQuickActions();
 
   Future<void> _launchWhatsApp(BuildContext context) async {
-    final uri = Uri.parse('https://wa.me/971501234567');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    final uri = Uri.parse('https://api.whatsapp.com/send?phone=+971554118178&text=Hello%2C');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to open WhatsApp. Please install WhatsApp.'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -983,10 +1072,23 @@ class _InvestorQuickActions extends StatelessWidget {
   const _InvestorQuickActions({required this.delay});
 
   Future<void> _launchWhatsApp(BuildContext context) async {
-    final uri = Uri.parse('https://wa.me/971501234567');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    final uri = Uri.parse('https://api.whatsapp.com/send?phone=+971554118178&text=Hello%2C');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to open WhatsApp. Please install WhatsApp.'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

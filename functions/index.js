@@ -438,3 +438,87 @@ exports.sendNotificationToUser = functions.https.onCall(async (data, context) =>
   }
 });
 
+/**
+ * Creates an admin user account
+ * WARNING: This function should be protected or removed after creating the initial admin
+ * Usage: Call this function with { email, password, name } to create an admin account
+ * 
+ * For security, you may want to:
+ * 1. Remove this function after creating your admin account
+ * 2. Add additional authentication/authorization checks
+ * 3. Use this only in development or with proper security measures
+ */
+exports.createAdminAccount = functions.https.onCall(async (data, context) => {
+  const { email, password, name } = data;
+  
+  if (!email || !password) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Email and password are required'
+    );
+  }
+  
+  try {
+    // Step 1: Create user in Firebase Authentication
+    let userRecord;
+    try {
+      userRecord = await admin.auth().createUser({
+        email: email,
+        password: password,
+        emailVerified: true,
+      });
+      console.log(`User created in Firebase Auth with UID: ${userRecord.uid}`);
+    } catch (error) {
+      if (error.code === 'auth/email-already-exists') {
+        console.log(`User with email ${email} already exists in Firebase Auth`);
+        userRecord = await admin.auth().getUserByEmail(email);
+        console.log(`Found existing user with UID: ${userRecord.uid}`);
+      } else {
+        throw error;
+      }
+    }
+    
+    // Step 2: Create or update user document in Firestore with admin privileges
+    const now = admin.firestore.Timestamp.now();
+    const userDocRef = db.collection('users').doc(userRecord.uid);
+    
+    const userDoc = await userDocRef.get();
+    
+    if (userDoc.exists) {
+      // Update existing user document to set isAdmin to true
+      await userDocRef.update({
+        isAdmin: true,
+        updatedAt: now,
+        email: email,
+        name: name || userDoc.data().name || 'Admin User',
+      });
+      console.log(`Updated existing user document with admin privileges`);
+    } else {
+      // Create new user document with admin privileges
+      await userDocRef.set({
+        userId: userRecord.uid,
+        email: email,
+        name: name || 'Admin User',
+        createdAt: now,
+        updatedAt: now,
+        isAdmin: true,
+      });
+      console.log(`Created user document in Firestore with admin privileges`);
+    }
+    
+    return {
+      success: true,
+      uid: userRecord.uid,
+      email: email,
+      name: name || 'Admin User',
+      message: 'Admin account created successfully'
+    };
+  } catch (error) {
+    console.error('Error creating admin account:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      `Failed to create admin account: ${error.message}`
+    );
+  }
+});
+

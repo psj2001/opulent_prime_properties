@@ -6,9 +6,16 @@ class ContactPage extends StatelessWidget {
   const ContactPage({super.key});
 
   Future<void> _launchWhatsApp() async {
-    final uri = Uri.parse('https://wa.me/971501234567');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    final uri = Uri.parse('https://api.whatsapp.com/send?phone=+971554118178&text=Hello%2C');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      // Handle error silently or show a message if needed
     }
   }
 
