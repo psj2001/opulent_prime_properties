@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "opulent_prime_properties" "\0"
+            VALUE "FileDescription", "Opulent Prime Properties" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "opulent_prime_properties" "\0"
+            VALUE "InternalName", "Opulent Prime Properties" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "opulent_prime_properties.exe" "\0"
-            VALUE "ProductName", "opulent_prime_properties" "\0"
+            VALUE "ProductName", "Opulent Prime Properties" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
