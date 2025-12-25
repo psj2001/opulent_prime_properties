@@ -68,10 +68,18 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.home_work,
-              size: 100,
-              color: Colors.white,
+            Image.asset(
+              'assets/Opulent Prime Properties logo-07.png',
+              height: 150,
+              width: 150,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.home_work,
+                  size: 100,
+                  color: Colors.white,
+                );
+              },
             ),
             const SizedBox(height: 24),
             const Text(

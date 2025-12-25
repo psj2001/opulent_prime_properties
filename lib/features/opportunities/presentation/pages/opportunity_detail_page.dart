@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
@@ -6,6 +7,7 @@ import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/areas_repository_impl.dart';
+import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:opulent_prime_properties/features/shortlist/data/repositories/shortlist_repository_impl.dart';
 import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
 
@@ -57,17 +59,149 @@ class _OpportunityDetailPageState extends State<OpportunityDetailPage> {
     }
   }
 
+  Future<void> _showAuthDialog(String action) async {
+    if (!mounted) return;
+    
+    final result = await showDialog<String>(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              const Text(
+                'Account Required',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Message
+              Text(
+                'You need an account to $action. Would you like to create an account or login?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Buttons
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'signup'),
+                  icon: const Icon(Icons.person_add, size: 20),
+                  label: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'login'),
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                    side: BorderSide(
+                      color: AppTheme.primaryColor,
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'cancel'),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (result == 'signup') {
+      if (mounted) {
+        context.push(RouteNames.signup);
+      }
+    } else if (result == 'login') {
+      if (mounted) {
+        context.push(RouteNames.login);
+      }
+    }
+  }
+
   Future<void> _handleShortlistToggle() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      await _showAuthDialog('add items to your shortlist');
+      return;
+    }
+
     final user = FirebaseConfig.auth.currentUser;
     if (user == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please sign in to add items to your shortlist'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      await _showAuthDialog('add items to your shortlist');
       return;
     }
 
@@ -311,11 +445,19 @@ class _OpportunityDetailPageState extends State<OpportunityDetailPage> {
                       const SizedBox(width: 16),
                       Expanded(
                         flex: 2,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            context.push('${RouteNames.bookConsultation}?opportunityId=${widget.opportunityId}');
+                        child: BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, authState) {
+                            return ElevatedButton(
+                              onPressed: () {
+                                if (authState is AuthAuthenticated) {
+                                  context.push('${RouteNames.bookConsultation}?opportunityId=${widget.opportunityId}');
+                                } else {
+                                  _showAuthDialog('book a consultation');
+                                }
+                              },
+                              child: const Text('Book Consultation'),
+                            );
                           },
-                          child: const Text('Book Consultation'),
                         ),
                       ),
                     ],
