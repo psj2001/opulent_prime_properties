@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/areas_repository_impl.dart';
 import 'package:opulent_prime_properties/features/shortlist/data/repositories/shortlist_repository_impl.dart';
@@ -65,7 +66,7 @@ class ShortlistPage extends StatelessWidget {
         stream: shortlistRepo.getShortlistStream(user.uid),
         builder: (context, shortlistSnapshot) {
           if (shortlistSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingWidget();
           }
 
           if (shortlistSnapshot.hasError) {
@@ -90,7 +91,7 @@ class ShortlistPage extends StatelessWidget {
             builder: (context, opportunitiesSnapshot) {
               if (opportunitiesSnapshot.connectionState ==
                   ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const LoadingWidget();
               }
 
               if (opportunitiesSnapshot.hasError) {

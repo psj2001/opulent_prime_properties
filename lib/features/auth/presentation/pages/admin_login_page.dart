@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/utils/validators.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -18,10 +19,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final _passwordController = TextEditingController();
 
   // Colors matching the design
-  static const Color darkTeal = Color(0xFF1E4D5C);
   static const Color teal = Color(0xFF2D7A8C);
   static const Color orange = Color(0xFFFF6B35);
-  static const Color amber = Color(0xFFFFA500);
   static const Color lightGray = Color(0xFFE0E0E0);
   static const Color grayBorder = Color(0xFFBDBDBD);
 
@@ -48,37 +47,34 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Stylized leaf/flame logo with gradient
-        Container(
-          width: 80,
-          height: 100,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [teal, orange],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: CustomPaint(
-            painter: _LogoPainter(),
-          ),
-        ),
+        // Container(
+        //   width: 80,
+        //   height: 100,
+        //   decoration: BoxDecoration(
+        //     borderRadius: BorderRadius.circular(20),
+        //     gradient: const LinearGradient(
+        //       begin: Alignment.centerLeft,
+        //       end: Alignment.centerRight,
+        //       colors: [teal, orange],
+        //     ),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Colors.black.withOpacity(0.2),
+        //         blurRadius: 10,
+        //         offset: const Offset(0, 5),
+        //       ),
+        //     ],
+        //   ),
+        //   child: CustomPaint(
+        //     painter: _LogoPainter(),
+        //   ),
+        // ),
         const SizedBox(height: 24),
-        const Text(
-          'Bailey and Co.',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1.2,
-          ),
+        Image.asset(
+          'assets/Opulent Prime Properties logo-03.png',
+          height: 120,
+          width: 350,
+          fit: BoxFit.contain,
         ),
       ],
     );
@@ -87,8 +83,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: darkTeal,
-      body: BlocListener<AuthBloc, AuthState>(
+      body: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1F3A), // Dark navy blue background
+        ),
+        child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             if (state.user.isAdmin) {
@@ -109,7 +108,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             // Left side - Logo and Company Name
             Expanded(
               child: Container(
-                color: darkTeal,
+                color: Colors.transparent,
                 child: Center(
                   child: _buildLogo(),
                 ),
@@ -123,7 +122,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             // Right side - Login Form
             Expanded(
               child: Container(
-                color: darkTeal,
+                color: Colors.transparent,
                 padding: const EdgeInsets.symmetric(horizontal: 60),
                 child: Center(
                   child: SingleChildScrollView(
@@ -256,15 +255,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     elevation: 0,
                                   ),
                                   child: state is AuthLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                          ),
+                                      ? const CompactLoadingIndicator(
+                                          size: 20,
+                                          color: Colors.white,
                                         )
                                       : const Text(
                                           'LOGIN',
@@ -309,6 +302,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

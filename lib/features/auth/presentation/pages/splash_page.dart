@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opulent_prime_properties/core/constants/app_constants.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 
 class SplashPage extends StatefulWidget {
@@ -91,8 +92,12 @@ class _SplashPageState extends State<SplashPage> {
               ),
             ),
             const SizedBox(height: 48),
-            const CircularProgressIndicator(
+            const AppCircularProgressIndicator(
+              size: 48,
+              strokeWidth: 4.0,
               color: Colors.white,
+              backgroundColor: Colors.white24,
+              usePrimaryColor: false,
             ),
           ],
         ),

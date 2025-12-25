@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:opulent_prime_properties/shared/models/opportunity_model.dart';
@@ -20,11 +21,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _heroController;
   late AnimationController _fadeController;
   late AnimationController _slideController;
+  late AnimationController _getStartedController;
   late Animation<double> _heroFadeAnimation;
   late Animation<double> _heroScaleAnimation;
   late Animation<Offset> _heroSlideAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _getStartedFadeAnimation;
+  late Animation<Offset> _getStartedSlideAnimation;
 
   @override
   void initState() {
@@ -79,11 +83,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
         );
 
+    // Get Started section animations (bottom to top)
+    _getStartedController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _getStartedFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _getStartedController,
+      curve: Curves.easeOut,
+    ));
+
+    _getStartedSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1.0), // Start from bottom
+      end: Offset.zero, // End at normal position
+    ).animate(CurvedAnimation(
+      parent: _getStartedController,
+      curve: Curves.easeOutCubic,
+    ));
+
     // Start animations
     _heroController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
       _fadeController.forward();
       _slideController.forward();
+    });
+    // Start Get Started animation after a delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _getStartedController.forward();
     });
   }
 
@@ -92,13 +122,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _heroController.dispose();
     _fadeController.dispose();
     _slideController.dispose();
+    _getStartedController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:  AppTheme.accentColor,
       body: SingleChildScrollView(
+        
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -112,27 +145,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               opacity: _fadeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Investor Quick Actions Section
-                      _AnimatedSectionHeader(title: 'Get Started', delay: 200),
-                      const SizedBox(height: 20),
-                      _InvestorQuickActions(delay: 300),
-                      const SizedBox(height: 40),
-                      // Featured Opportunities Section
-                      _AnimatedSectionHeader(
-                        title: 'Featured Opportunities',
-                        delay: 400,
-                        showViewAll: true,
-                        onViewAll: () => context.push(RouteNames.categories),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Investor Quick Actions Section (Bottom Sheet Style)
+                    FadeTransition(
+                      opacity: _getStartedFadeAnimation,
+                      child: SlideTransition(
+                        position: _getStartedSlideAnimation,
+                        child: _GetStartedSection(),
                       ),
-                      const SizedBox(height: 20),
-                      _AnimatedFeaturedOpportunities(delay: 500),
-                    ],
-                  ),
+                    ),
+                    // Featured Opportunities Section
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _AnimatedSectionHeader(
+                            title: 'Featured Opportunities',
+                            delay: 400,
+                            showViewAll: true,
+                            onViewAll: () => context.push(RouteNames.categories),
+                          ),
+                          const SizedBox(height: 20),
+                          _AnimatedFeaturedOpportunities(delay: 500),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -561,6 +603,379 @@ class _AnimatedSectionHeaderState extends State<_AnimatedSectionHeader>
   }
 }
 
+// Get Started Section (non-animated, will be animated as a whole container)
+class _GetStartedSection extends StatelessWidget {
+  const _GetStartedSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Bottom sheet handle indicator
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Header
+            Text(
+              'Get Started',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textSecondary,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Quick Actions
+            _StaticQuickActions(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Static Quick Actions (non-animated cards)
+class _StaticQuickActions extends StatelessWidget {
+  const _StaticQuickActions();
+
+  Future<void> _launchWhatsApp(BuildContext context) async {
+    final uri = Uri.parse('https://wa.me/971501234567');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open WhatsApp. Please install WhatsApp.'),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showAuthDialog(BuildContext context) async {
+    if (!context.mounted) return;
+    
+    final result = await showDialog<String>(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              const Text(
+                'Account Required',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Message
+              Text(
+                'You need an account to book a consultation. Would you like to create an account or login?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Buttons
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'signup'),
+                  icon: const Icon(Icons.person_add, size: 20),
+                  label: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'login'),
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                    side: BorderSide(
+                      color: AppTheme.primaryColor,
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'cancel'),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (result == 'signup') {
+      if (context.mounted) {
+        context.push(RouteNames.signup);
+      }
+    } else if (result == 'login') {
+      if (context.mounted) {
+        context.push(RouteNames.login);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _StaticQuickActionCard(
+                title: 'Explore Opportunities',
+                icon: Icons.search_rounded,
+                color: AppTheme.primaryColor,
+                onTap: () => context.push(RouteNames.categories),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StaticQuickActionCard(
+                title: 'Golden Visa\n(10 Years)',
+                icon: Icons.verified_user_rounded,
+                color: AppTheme.secondaryColor,
+                onTap: () => context.push(RouteNames.goldenVisa),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, authState) {
+                  return _StaticQuickActionCard(
+                    title: 'Book Consultation',
+                    icon: Icons.calendar_today_rounded,
+                    color: AppTheme.successColor,
+                    onTap: () {
+                      if (authState is AuthAuthenticated) {
+                        context.push(RouteNames.bookConsultation);
+                      } else {
+                        _showAuthDialog(context);
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StaticQuickActionCard(
+                title: 'Talk on WhatsApp',
+                icon: Icons.chat_rounded,
+                color: const Color(0xFF25D366),
+                onTap: () => _launchWhatsApp(context),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _StaticQuickActionCard(
+                title: 'Blog',
+                icon: Icons.article_rounded,
+                color: AppTheme.accentColor,
+                onTap: () => context.push(RouteNames.blog),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StaticQuickActionCard(
+                title: 'About Us',
+                icon: Icons.info_rounded,
+                color: AppTheme.primaryColor,
+                onTap: () => context.push(RouteNames.aboutUs),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// Static Quick Action Card (non-animated)
+class _StaticQuickActionCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StaticQuickActionCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_StaticQuickActionCard> createState() => _StaticQuickActionCardState();
+}
+
+class _StaticQuickActionCardState extends State<_StaticQuickActionCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.scale(
+      scale: _isPressed ? 0.95 : 1.0,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: InkWell(
+          onTap: widget.onTap,
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [Colors.white, widget.color.withOpacity(0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: widget.color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    size: 32,
+                    color: widget.color,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Investor Quick Actions
 class _InvestorQuickActions extends StatelessWidget {
   final int delay;
@@ -954,10 +1369,9 @@ class _AnimatedFeaturedOpportunities extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.primaryColor,
-                ),
+              child: AppCircularProgressIndicator(
+                size: 40,
+                strokeWidth: 3.5,
               ),
             );
           }

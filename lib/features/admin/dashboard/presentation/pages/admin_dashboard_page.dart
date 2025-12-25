@@ -4,6 +4,7 @@ import 'package:opulent_prime_properties/core/constants/app_constants.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/core/utils/date_formatter.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/leads/data/repositories/leads_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/consultants/data/repositories/consultants_repository_impl.dart';
@@ -265,7 +266,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           stream: _leadsRepo.getLeads(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
+              return const LoadingWidget();
             }
 
             final leads = snapshot.data ?? [];
@@ -434,11 +435,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           stream: _leadsRepo.getLeads(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
-                ),
+              return const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: LoadingWidget(),
               );
             }
 

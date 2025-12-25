@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/opportunities_repository_impl.dart';
 import 'package:opulent_prime_properties/features/admin/opportunities/data/repositories/areas_repository_impl.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
@@ -268,7 +269,7 @@ class _OpportunityDetailPageState extends State<OpportunityDetailPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: LoadingWidget(),
           );
         }
         
@@ -430,10 +431,9 @@ class _OpportunityDetailPageState extends State<OpportunityDetailPage> {
                         child: OutlinedButton.icon(
                           onPressed: _isLoadingShortlist ? null : _handleShortlistToggle,
                           icon: _isLoadingShortlist
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                              ? const CompactLoadingIndicator(
+                                  size: 16,
+                                  color: AppTheme.primaryColor,
                                 )
                               : Icon(_isInShortlist ? Icons.favorite : Icons.favorite_border),
                           label: Text(_isInShortlist ? 'In Shortlist' : 'Shortlist'),

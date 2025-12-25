@@ -6,6 +6,7 @@ import 'package:opulent_prime_properties/core/constants/app_constants.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/firebase/firebase_config.dart';
 import 'package:opulent_prime_properties/core/utils/validators.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:opulent_prime_properties/features/consultation/data/repositories/consultation_repository_impl.dart';
 import 'package:opulent_prime_properties/shared/models/consultation_model.dart';
@@ -292,13 +293,9 @@ class _BookConsultationPageState extends State<BookConsultationPage> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
+                    ? const CompactLoadingIndicator(
+                        size: 20,
+                        color: Colors.white,
                       )
                     : const Text('Book Consultation'),
               ),

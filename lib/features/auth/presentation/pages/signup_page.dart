@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:opulent_prime_properties/core/constants/route_names.dart';
 import 'package:opulent_prime_properties/core/theme/app_theme.dart';
 import 'package:opulent_prime_properties/core/utils/validators.dart';
+import 'package:opulent_prime_properties/core/widgets/loading_widget.dart';
 import 'package:opulent_prime_properties/features/auth/presentation/bloc/auth_bloc.dart';
 
 class SignupPage extends StatefulWidget {
@@ -209,13 +210,9 @@ class _SignupPageState extends State<SignupPage> {
                                         elevation: 2,
                                       ),
                                       child: state is AuthLoading
-                                          ? const SizedBox(
-                                              height: 24,
-                                              width: 24,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                              ),
+                                          ? const CompactLoadingIndicator(
+                                              size: 24,
+                                              color: Colors.white,
                                             )
                                           : const Text(
                                               'Sign Up',
